@@ -1,0 +1,10 @@
+{
+  "agents": {
+    "cline": {
+      "command": "cline",
+      "enabled": true,
+      "mode": "plan",
+      "timeout_seconds": 120
+    }
+  }
+}
