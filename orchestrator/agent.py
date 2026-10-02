@@ -1,13 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional
-
-
-@dataclass
-class AgentTask:
-    task_id: str
-    prompt: str
-    working_directory: str
-    timeout_seconds: int = 120
+from .task import AgentTask
 
 
 @dataclass

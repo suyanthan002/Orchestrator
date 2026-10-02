@@ -2,10 +2,10 @@ import argparse
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import uuid4
 
 from orchestrator.agent import AgentTask
 from orchestrator.runner import AgentRunner
+from orchestrator.task_manager import TaskManager
 from adapters.cline import ClineAdapter
 
 
@@ -64,11 +64,10 @@ def save_result(result):
 
     return output_file
 
+def create_demo_task(config):
+    cline_config = config["agents"]["cline"]
 
-def create_task():
-    task_id = (
-        f"run-{uuid4().hex[:8]}"
-    )
+    task_manager = TaskManager(ROOT)
 
     prompt = f"""
 You are being called by NAO
@@ -83,8 +82,7 @@ Inspect this file:
 Explain:
 
 1. What the function does.
-2. What happens when the file is
-   executed directly.
+2. What happens when the file is executed directly.
 3. What output it should produce.
 
 STRICT RULES:
@@ -96,13 +94,16 @@ STRICT RULES:
 - Return your findings to NAO.
 """
 
-    return AgentTask(
-        task_id=task_id,
+    return task_manager.create_task(
         prompt=prompt,
         working_directory=str(ROOT),
-        timeout_seconds=120,
+        timeout_seconds=cline_config["timeout_seconds"],
+        task_type="read_only_verification",
+        metadata={
+            "target_file": str(LAB_FILE),
+            "agent_mode": cline_config["mode"],
+        },
     )
-
 
 def main():
 
@@ -130,13 +131,7 @@ def main():
         config["agents"]["cline"]
     )
 
-    task = create_task()
-
-    task.timeout_seconds = (
-        cline_config[
-            "timeout_seconds"
-        ]
-    )
+    task = create_demo_task(config)
 
     print()
     print("=" * 60)
