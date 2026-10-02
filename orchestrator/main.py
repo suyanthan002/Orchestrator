@@ -35,8 +35,15 @@ def save_result(result):
         "success": result.success,
         "exit_code": result.exit_code,
         "command": result.command,
+
+        "finish_reason": result.finish_reason,
+        "iterations": result.iterations,
+        "usage": result.usage,
+        "final_response": result.final_response,
+
         "stdout": result.stdout,
         "stderr": result.stderr,
+
         "completed_at": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -143,70 +150,50 @@ def main():
     print()
 
     if not args.execute:
-
         print("DRY RUN")
         print("-" * 60)
-        print(
-            "The task was created successfully."
-        )
-        print(
-            "Cline has NOT been launched."
-        )
-        print(
-            "No project files will be modified."
-        )
+        print("The task was created successfully.")
+        print("Cline has NOT been launched.")
+        print("No project files will be modified.")
         print()
-        print(
-            "Run with --execute when "
-            "ready for the controlled test."
-        )
+        print("Run with --execute when ready for the controlled test.")
         print()
-
         return
 
     print("Launching Cline...")
     print()
 
     runner = AgentRunner()
-
-    adapter = ClineAdapter(
-        runner
-    )
-
-    result = adapter.execute(
-        task
-    )
-
-    output_file = save_result(
-        result
-    )
+    adapter = ClineAdapter(runner)
+    result = adapter.execute(task)
+    output_file = save_result(result)
 
     print("-" * 60)
-    print(
-        f"Success   : {result.success}"
-    )
-    print(
-        f"Exit code : {result.exit_code}"
-    )
-    print(
-        f"Result    : {output_file}"
-    )
+    print(f"Success        : {result.success}")
+    print(f"Exit code      : {result.exit_code}")
+    print(f"Finish reason  : {result.finish_reason}")
+    print(f"Iterations     : {result.iterations}")
+    print(f"Result         : {output_file}")
     print("-" * 60)
 
-    if result.stdout:
-
+    if result.final_response:
         print()
-        print("Cline output:")
+        print("Cline final response:")
         print("-" * 60)
-        print(result.stdout)
+        print(result.final_response)
+
+    if result.usage:
+        print()
+        print("Usage:")
+        print(json.dumps(
+            result.usage,
+            indent=2,
+        ))
 
     if result.stderr:
-
         print()
         print("Cline stderr:")
         print("-" * 60)
         print(result.stderr)
-
-
 if __name__ == "__main__":
     main()
