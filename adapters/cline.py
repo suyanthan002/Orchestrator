@@ -12,7 +12,7 @@ class ClineAdapter:
     def execute(self, task: AgentTask):
 
         command = [
-            "cline",
+            "cline.cmd",
             "--json",
             "--plan",
             "--auto-approve",
