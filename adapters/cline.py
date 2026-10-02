@@ -16,7 +16,7 @@ class ClineAdapter:
             "--json",
             "--plan",
             "--auto-approve",
-            "false",
+            "true",
         ]
 
         return self.runner.run(
