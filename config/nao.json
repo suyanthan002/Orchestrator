@@ -1,0 +1,35 @@
+{
+  "_comment": "NAO orchestration policy. Routing is explicit and configured, not hard-coded (plan.md section 17).",
+  "resources": {
+    "max_concurrent_agents": 1,
+    "min_available_ram_percent": 5.0,
+    "queue_timeout_seconds": 1800,
+    "poll_interval_seconds": 0.5
+  },
+  "routing": {
+    "architect": ["antigravity", "cursor", "cline", "kilo", "goose"],
+    "implementer": ["cursor", "antigravity", "cline", "kilo", "aider", "goose"],
+    "reviewer": ["copilot", "cline", "cursor", "kilo", "antigravity"],
+    "tester": ["copilot", "cline", "cursor", "goose", "antigravity"],
+    "debugger": ["cursor", "cline", "antigravity", "kilo"],
+    "security_reviewer": ["copilot", "cursor", "antigravity", "cline"],
+    "documentation": ["copilot", "antigravity", "cline"],
+    "final_verifier": ["copilot", "antigravity", "cursor"]
+  },
+  "approval_levels": {
+    "read": 0,
+    "search": 0,
+    "git_read": 0,
+    "write": 1,
+    "shell": 1,
+    "package_install": 1,
+    "migration": 1,
+    "git_commit": 2,
+    "git_merge": 2,
+    "delete": 2,
+    "network": 2,
+    "secret_access": 2,
+    "git_push": 3,
+    "deployment": 3
+  }
+}

@@ -3,6 +3,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from nao.config import redact_data
+
 from orchestrator.agent import AgentTask
 from orchestrator.runner import AgentRunner
 from orchestrator.task_manager import TaskManager
@@ -54,9 +56,11 @@ def save_result(result):
         / f"{result.task_id}.json"
     )
 
+    # F-05: the legacy result file persists stdout/stderr/command too, so it
+    # passes through the same redaction boundary as the modern artifacts.
     output_file.write_text(
         json.dumps(
-            output,
+            redact_data(output),
             indent=2,
         ),
         encoding="utf-8",

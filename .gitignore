@@ -6,4 +6,8 @@ venv/
 logs/*
 runs/*
 !runs/.gitkeep
+audit/*
 lab/.venv/
+
+# NAO isolated Git worktrees are created beside the repository.
+.nao-worktrees/

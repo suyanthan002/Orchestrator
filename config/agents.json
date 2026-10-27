@@ -1,10 +1,279 @@
 {
+  "_comment": "NAO agent configuration. Secrets are never stored here; use ${ENV:VAR} references resolved at runtime.",
   "agents": {
     "cline": {
-      "command": "cline",
       "enabled": true,
+      "interfaces": ["cli", "acp"],
+      "capabilities": [
+        "planning",
+        "implementation",
+        "code_review",
+        "testing",
+        "debugging",
+        "shell",
+        "file_edit",
+        "read_only_analysis",
+        "structured_output",
+        "streaming",
+        "session_continuation",
+        "git_worktree"
+      ],
+      "supports": {
+        "read_only": true,
+        "file_edit": true,
+        "shell": true,
+        "streaming": true,
+        "structured_output": true,
+        "session_continuation": true
+      },
+      "priority": 80,
+      "timeout_seconds": 300,
       "mode": "plan",
-      "timeout_seconds": 120
+      "base_args": ["--json"],
+      "read_only_args": ["--plan"],
+      "write_args": ["--auto-approve=true"],
+      "discovery": {
+        "commands": ["cline"],
+        "paths": [],
+        "node_entry": "cline/bin/cline"
+      },
+      "permission_mapping": {
+        "write": {"allow": ["--auto-approve=true"]},
+        "shell": {"allow": ["--auto-approve=true"]},
+        "package_install": {"allow": ["--auto-approve=true"]}
+      }
+    },
+
+    "kilo": {
+      "enabled": true,
+      "interfaces": ["cli", "acp"],
+      "capabilities": [
+        "planning",
+        "implementation",
+        "code_review",
+        "testing",
+        "debugging",
+        "shell",
+        "file_edit",
+        "read_only_analysis",
+        "structured_output",
+        "session_continuation"
+      ],
+      "supports": {
+        "read_only": true,
+        "file_edit": true,
+        "shell": true,
+        "streaming": true,
+        "structured_output": true,
+        "session_continuation": true
+      },
+      "priority": 70,
+      "timeout_seconds": 300,
+      "base_args": ["--json"],
+      "read_only_args": ["--plan"],
+      "write_args": ["--auto-approve=true"],
+      "discovery": {
+        "commands": ["kilo", "kilo-code"],
+        "paths": []
+      },
+      "permission_mapping": {
+        "write": {"allow": ["--auto-approve=true"]},
+        "shell": {"allow": ["--auto-approve=true"]}
+      }
+    },
+
+    "goose": {
+      "enabled": true,
+      "interfaces": ["acp", "cli"],
+      "capabilities": [
+        "planning",
+        "implementation",
+        "code_review",
+        "testing",
+        "debugging",
+        "shell",
+        "file_edit",
+        "read_only_analysis",
+        "session_continuation"
+      ],
+      "supports": {
+        "read_only": true,
+        "file_edit": true,
+        "shell": true,
+        "streaming": false,
+        "structured_output": false,
+        "session_continuation": true
+      },
+      "priority": 60,
+      "timeout_seconds": 300,
+      "base_args": ["run", "--no-session"],
+      "prompt_flag": "-t",
+      "read_only_args": [],
+      "write_args": [],
+      "discovery": {
+        "commands": ["goose"],
+        "paths": []
+      },
+      "permission_mapping": {}
+    },
+
+    "aider": {
+      "enabled": true,
+      "interfaces": ["cli"],
+      "capabilities": [
+        "planning",
+        "implementation",
+        "testing",
+        "debugging",
+        "shell",
+        "file_edit",
+        "read_only_analysis"
+      ],
+      "supports": {
+        "read_only": true,
+        "file_edit": true,
+        "shell": true,
+        "streaming": false,
+        "structured_output": false,
+        "session_continuation": false
+      },
+      "priority": 50,
+      "timeout_seconds": 300,
+      "base_args": ["--yes", "--no-auto-commits", "--no-stream"],
+      "prompt_flag": "--message",
+      "read_only_args": ["--dry-run"],
+      "write_args": [],
+      "discovery": {
+        "commands": ["aider"],
+        "paths": []
+      },
+      "permission_mapping": {
+        "git_commit": {"deny": ["--no-auto-commits"]}
+      }
+    },
+
+    "copilot": {
+      "enabled": true,
+      "interfaces": ["cli"],
+      "capabilities": [
+        "planning",
+        "code_review",
+        "testing",
+        "debugging",
+        "shell",
+        "file_edit",
+        "read_only_analysis",
+        "security_review",
+        "documentation"
+      ],
+      "supports": {
+        "read_only": true,
+        "file_edit": true,
+        "shell": true,
+        "streaming": false,
+        "structured_output": false,
+        "session_continuation": false
+      },
+      "priority": 55,
+      "timeout_seconds": 300,
+      "base_args": ["--silent"],
+      "prompt_flag": "-p",
+      "read_only_args": ["--deny-tool=write", "--deny-tool=shell"],
+      "write_args": [],
+      "discovery": {
+        "commands": ["copilot", "github-copilot-cli"],
+        "paths": []
+      },
+      "permission_mapping": {
+        "write": {"allow": ["--allow-tool=write"]},
+        "shell": {"allow": ["--allow-tool=shell"]},
+        "network": {"deny": ["--deny-tool=network"]}
+      }
+    },
+
+    "cursor": {
+      "enabled": true,
+      "interfaces": ["cli", "acp"],
+      "capabilities": [
+        "planning",
+        "implementation",
+        "code_review",
+        "testing",
+        "debugging",
+        "shell",
+        "file_edit",
+        "read_only_analysis",
+        "structured_output",
+        "streaming",
+        "session_continuation",
+        "git_worktree",
+        "security_review"
+      ],
+      "supports": {
+        "read_only": true,
+        "file_edit": true,
+        "shell": true,
+        "streaming": true,
+        "structured_output": true,
+        "session_continuation": true
+      },
+      "priority": 85,
+      "timeout_seconds": 300,
+      "base_args": [],
+      "prompt_flag": "-p",
+      "read_only_args": ["--mode=plan"],
+      "write_args": ["--force"],
+      "discovery": {
+        "commands": ["cursor-agent"],
+        "paths": []
+      },
+      "permission_mapping": {
+        "write": {"allow": ["--force"]},
+        "shell": {"allow": ["--force"]}
+      }
+    },
+
+    "antigravity": {
+      "enabled": true,
+      "interfaces": ["cli"],
+      "capabilities": [
+        "planning",
+        "implementation",
+        "code_review",
+        "testing",
+        "debugging",
+        "shell",
+        "file_edit",
+        "read_only_analysis",
+        "structured_output",
+        "streaming",
+        "session_continuation",
+        "git_worktree",
+        "security_review",
+        "documentation"
+      ],
+      "supports": {
+        "read_only": true,
+        "file_edit": true,
+        "shell": true,
+        "streaming": true,
+        "structured_output": true,
+        "session_continuation": true
+      },
+      "priority": 90,
+      "timeout_seconds": 300,
+      "base_args": ["--output-format", "stream-json"],
+      "prompt_flag": "-p",
+      "read_only_args": ["--permission-mode", "plan"],
+      "write_args": [],
+      "discovery": {
+        "commands": ["antigravity", "agy", "antigravity-cli"],
+        "paths": []
+      },
+      "permission_mapping": {
+        "write": {"allow": ["--permission-mode", "accept-edits"]},
+        "shell": {"allow": ["--permission-mode", "accept-edits"]}
+      }
     }
   }
 }
