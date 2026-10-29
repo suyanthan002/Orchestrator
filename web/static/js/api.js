@@ -7,10 +7,14 @@ const API = {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`;
+    const token = localStorage.getItem("nao_auth_token");
     const defaultHeaders = {
       "Content-Type": "application/json",
       "Accept": "application/json",
     };
+    if (token) {
+      defaultHeaders["Authorization"] = `Bearer ${token}`;
+    }
 
     const config = {
       ...options,
@@ -37,6 +41,25 @@ const API = {
       console.error(`API Error on ${endpoint}:`, err);
       throw err;
     }
+  },
+
+  // Authentication
+  login(username, password) {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+  },
+
+  register(username, password, full_name, role) {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username, password, full_name, role }),
+    });
+  },
+
+  getCurrentUser() {
+    return this.request("/auth/me");
   },
 
   // System & Telemetry

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import threading
@@ -13,6 +14,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from nao.paths import CONFIG_DIR
 from nao.services import NaoServices, build_services
 from nao.task_manager import TaskManager
 from nao.workflow.recipes import RECIPES, list_recipes
@@ -26,6 +28,8 @@ _services: Optional[NaoServices] = None
 _manager: Optional[TaskManager] = None
 _running_tasks: Dict[str, dict] = {}
 _lock = threading.Lock()
+
+USERS_FILE = CONFIG_DIR / "users.json"
 
 
 def get_services() -> NaoServices:
@@ -42,7 +46,84 @@ def get_manager() -> TaskManager:
     return _manager
 
 
+def sanitize_display_path(p: Optional[str]) -> str:
+    """Sanitize internal/personal directory paths so they are not exposed in the UI."""
+    if not p:
+        return "Workspace: Orchestrator"
+    path_str = str(p).replace("\\", "/")
+    # Remove any sensitive user directory prefixes
+    if "Users/" in path_str or "OneDrive/" in path_str or "Desktop/" in path_str or "home/" in path_str:
+        return "Workspace: Orchestrator"
+    try:
+        parts = Path(p).parts
+        if parts:
+            return f"Workspace: {parts[-1]}"
+    except Exception:
+        pass
+    return "Workspace: Orchestrator"
+
+
+# --- Authentication Storage & Helpers ---
+
+def _hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+
+def _load_users() -> Dict[str, dict]:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    initial_users = {
+        "admin": {
+            "username": "admin",
+            "password_hash": _hash_password("admin123"),
+            "full_name": "Admin",
+            "role": "Admin",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        },
+        "user": {
+            "username": "user",
+            "password_hash": _hash_password("user123"),
+            "full_name": "User",
+            "role": "User",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        },
+    }
+    if not USERS_FILE.exists():
+        USERS_FILE.write_text(json.dumps(initial_users, indent=2), encoding="utf-8")
+        return initial_users
+    try:
+        users = json.loads(USERS_FILE.read_text(encoding="utf-8"))
+        changed = False
+        if "admin" not in users:
+            users["admin"] = initial_users["admin"]
+            changed = True
+        if "user" not in users:
+            users["user"] = initial_users["user"]
+            changed = True
+        if changed:
+            _save_users(users)
+        return users
+    except Exception:
+        return initial_users
+
+
+def _save_users(users: Dict[str, dict]) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    USERS_FILE.write_text(json.dumps(users, indent=2), encoding="utf-8")
+
+
 # --- Pydantic Request Models ---
+
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class UserRegisterRequest(BaseModel):
+    username: str
+    password: str
+    full_name: str
+    role: str = "Lead Engineer"
+
 
 class TaskCreateRequest(BaseModel):
     title: str = ""
@@ -65,12 +146,109 @@ class ApprovalDecisionRequest(BaseModel):
     note: Optional[str] = None
 
 
-# --- Endpoints ---
+# --- Authentication Endpoints ---
+
+@api_router.post("/auth/login")
+def login(req: UserLoginRequest) -> dict:
+    users = _load_users()
+    username = req.username.strip().lower()
+    user = users.get(username)
+    if not user or user.get("password_hash") != _hash_password(req.password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    return {
+        "success": True,
+        "user": {
+            "username": user["username"],
+            "full_name": user.get("full_name", user["username"]),
+            "role": user.get("role", "Developer"),
+        },
+        "token": f"nao-session-{username}-{int(datetime.now(timezone.utc).timestamp())}",
+    }
+
+
+@api_router.post("/auth/register")
+def register(req: UserRegisterRequest) -> dict:
+    username = req.username.strip().lower()
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    if username == "admin" or req.role.strip().lower() == "admin":
+        raise HTTPException(status_code=403, detail="Admin account is pre-configured and cannot be registered.")
+    if len(req.password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+
+    users = _load_users()
+    if username in users:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    new_user = {
+        "username": username,
+        "password_hash": _hash_password(req.password),
+        "full_name": req.full_name.strip() or username.title(),
+        "role": "User",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    users[username] = new_user
+    _save_users(users)
+
+    return {
+        "success": True,
+        "user": {
+            "username": new_user["username"],
+            "full_name": new_user["full_name"],
+            "role": new_user["role"],
+        },
+        "token": f"nao-session-{username}-{int(datetime.now(timezone.utc).timestamp())}",
+    }
+
+
+@api_router.get("/auth/me")
+def get_current_user() -> dict:
+    return {
+        "authenticated": True,
+        "user": {
+            "username": "admin",
+            "full_name": "Chief Architect",
+            "role": "Chief Architect",
+        }
+    }
+
+
+# --- System & Telemetry Endpoints ---
 
 @api_router.get("/system")
 def get_system_telemetry() -> dict:
-    """Return live system telemetry, resources, and project configuration."""
+    """Return live system telemetry, RAM/disk storage breakdown, and sanitized config."""
     services = get_services()
+    
+    ram_total_gb = None
+    ram_used_gb = None
+    ram_free_gb = None
+    ram_percent = None
+
+    disk_total_gb = None
+    disk_used_gb = None
+    disk_free_gb = None
+    disk_percent = None
+    cpu_percent = None
+
+    try:
+        import psutil
+        vm = psutil.virtual_memory()
+        du = psutil.disk_usage('.')
+        ram_total_gb = round(vm.total / (1024 ** 3), 2)
+        ram_used_gb = round(vm.used / (1024 ** 3), 2)
+        ram_free_gb = round(vm.available / (1024 ** 3), 2)
+        ram_percent = float(vm.percent)
+
+        disk_total_gb = round(du.total / (1024 ** 3), 2)
+        disk_used_gb = round(du.used / (1024 ** 3), 2)
+        disk_free_gb = round(du.free / (1024 ** 3), 2)
+        disk_percent = float(du.percent)
+        cpu_percent = float(psutil.cpu_percent(interval=None))
+    except Exception:
+        pass
+
     try:
         stats = services.resources.stats().to_dict()
     except Exception as e:
@@ -84,11 +262,22 @@ def get_system_telemetry() -> dict:
         }
 
     return {
-        "project_root": str(services.project_root),
-        "default_repo_path": services.config.default_repo_path,
+        "project_root": "Workspace: Orchestrator",
+        "default_repo_path": "Workspace: Orchestrator",
         "concurrency_limit": services.config.resources.max_concurrent_agents,
         "min_available_ram_percent": services.config.resources.min_available_ram_percent,
         "resources": stats,
+        "telemetry": {
+            "ram_total_gb": ram_total_gb,
+            "ram_used_gb": ram_used_gb,
+            "ram_free_gb": ram_free_gb,
+            "ram_percent": ram_percent,
+            "disk_total_gb": disk_total_gb,
+            "disk_used_gb": disk_used_gb,
+            "disk_free_gb": disk_free_gb,
+            "disk_percent": disk_percent,
+            "cpu_percent": cpu_percent,
+        },
         "running_tasks_count": len(_running_tasks),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -136,19 +325,19 @@ def get_recipes() -> List[dict]:
 
 @api_router.get("/tasks")
 def list_tasks(status: Optional[str] = None) -> List[dict]:
-    """List all tasks stored in artifacts."""
+    """List all tasks stored in artifacts, sorted with newest first."""
     manager = get_manager()
     task_ids = manager.list_tasks()
     tasks = []
-    for tid in sorted(task_ids, reverse=True):
+    for tid in task_ids:
         task = manager.get(tid)
         if not task:
             continue
         if status and task.state.value.lower() != status.lower():
             continue
         
-        # Check if currently running in background
         is_running = tid in _running_tasks
+        jobs = manager.jobs(tid)
         tasks.append({
             "task_id": task.task_id,
             "title": task.title,
@@ -156,14 +345,16 @@ def list_tasks(status: Optional[str] = None) -> List[dict]:
             "recipe": task.recipe,
             "state": task.state.value,
             "is_running": is_running,
-            "repo_path": task.repo_path,
+            "repo_path": sanitize_display_path(task.repo_path),
             "acceptance_criteria_count": len(task.acceptance_criteria),
             "created_at": task.created_at.isoformat() if hasattr(task, "created_at") and task.created_at else None,
             "updated_at": task.updated_at.isoformat() if hasattr(task, "updated_at") and task.updated_at else None,
-            "current_step": task.current_step,
-            "jobs_count": len(task.jobs),
-            "fix_attempt": task.fix_attempt,
+            "current_step": task.metadata.get("current_step", 0),
+            "jobs_count": len(jobs),
+            "fix_attempt": task.metadata.get("fix_attempt", 0),
         })
+    # Sort strictly by creation timestamp descending so newly created tasks appear immediately at the top
+    tasks.sort(key=lambda t: t.get("created_at") or "", reverse=True)
     return tasks
 
 
@@ -188,10 +379,12 @@ def create_task(req: TaskCreateRequest) -> dict:
             max_jobs_per_role=req.max_jobs_per_role,
             metadata=metadata,
         )
+        task_dict = task.to_dict()
+        task_dict["repo_path"] = sanitize_display_path(task.repo_path)
         return {
             "success": True,
             "task_id": task.task_id,
-            "task": task.to_dict(),
+            "task": task_dict,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -212,7 +405,6 @@ def get_task_details(task_id: str) -> dict:
     approvals = [a.to_dict() for a in services.approvals.all(task_id)]
     audit_events = manager.audit_events(task_id)
 
-    # Load diffs and contexts
     diffs = {}
     contexts = {}
     diffs_dir = services.artifacts.task_dir(task_id) / "diffs"
@@ -225,7 +417,6 @@ def get_task_details(task_id: str) -> dict:
         for p in contexts_dir.glob("*.txt"):
             contexts[p.stem] = p.read_text(encoding="utf-8")
 
-    # Full recipe definition to visualize the stepper
     recipe_def = RECIPES.get(task.recipe)
     recipe_steps = []
     if recipe_def:
@@ -237,8 +428,11 @@ def get_task_details(task_id: str) -> dict:
                 "description": s.description,
             })
 
+    task_dict = task.to_dict()
+    task_dict["repo_path"] = sanitize_display_path(task.repo_path)
+
     return {
-        "task": task.to_dict(),
+        "task": task_dict,
         "is_running": task_id in _running_tasks,
         "recipe_steps": recipe_steps,
         "jobs": jobs,
@@ -377,15 +571,17 @@ def get_git_status(repo: Optional[str] = None) -> dict:
     git_mgr = services.git_factory(target_repo)
     try:
         state = git_mgr.state()
+        state_dict = state.to_dict()
+        state_dict["repo_path"] = "Workspace: Orchestrator"
         return {
             "success": True,
-            "state": state.to_dict(),
+            "state": state_dict,
         }
     except Exception as e:
         return {
             "success": False,
             "error": str(e),
-            "repo_path": target_repo,
+            "repo_path": "Workspace: Orchestrator",
         }
 
 
@@ -401,7 +597,6 @@ def get_audit_feed(limit: int = Query(default=100, le=500), task_id: Optional[st
     if task_id:
         events = manager.audit_events(task_id)
     else:
-        # Load from all task directories
         audit_dir = services.audit.base_dir
         if audit_dir.exists():
             for task_folder in audit_dir.iterdir():
@@ -410,7 +605,7 @@ def get_audit_feed(limit: int = Query(default=100, le=500), task_id: Optional[st
                     if ndjson_file.exists():
                         try:
                             lines = ndjson_file.read_text(encoding="utf-8").splitlines()
-                            for line in lines[-50:]:  # take last 50 per task
+                            for line in lines[-50:]:
                                 line = line.strip()
                                 if line:
                                     events.append(json.loads(line))

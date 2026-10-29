@@ -20,22 +20,38 @@
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section-label">Core Control Plane</div>
-        <a class="nav-item active" data-view="dashboard">
+        <!-- USER NAVIGATION (Dedicated Simple AI Studio) -->
+        <div class="nav-section-label user-nav-section" style="display: none;">AI Builder Workspace</div>
+        <a class="nav-item user-nav-item" data-view="user-studio" style="display: none;">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </span>
+          <span>What to Build</span>
+        </a>
+        <a class="nav-item user-nav-item" data-view="user-builds" style="display: none;">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </span>
+          <span>My Builds &amp; Progress</span>
+        </a>
+
+        <!-- ADMIN NAVIGATION (Full Control Plane) -->
+        <div class="nav-section-label admin-nav-section">Core Control Plane</div>
+        <a class="nav-item admin-nav-item active" data-view="dashboard">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           </span>
           <span>Dashboard</span>
         </a>
 
-        <a class="nav-item" data-view="tasks">
+        <a class="nav-item admin-nav-item" data-view="tasks">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </span>
-          <span>Tasks & Workflows</span>
+          <span>Tasks &amp; Workflows</span>
         </a>
 
-        <a class="nav-item" data-view="approvals">
+        <a class="nav-item admin-nav-item" data-view="approvals">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </span>
@@ -43,48 +59,49 @@
           <span id="nav-approvals-badge" class="nav-badge badge-amber" style="display: none;">0</span>
         </a>
 
-        <div class="nav-section-label">Fleet & Platform</div>
-        <a class="nav-item" data-view="agents">
+        <div class="nav-section-label admin-nav-section">Fleet &amp; Platform</div>
+        <a class="nav-item admin-nav-item" data-view="agents">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/></svg>
           </span>
           <span>Agent Fleet (7)</span>
         </a>
 
-        <a class="nav-item" data-view="recipes">
+        <a class="nav-item admin-nav-item" data-view="recipes">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
           </span>
           <span>Workflow Recipes</span>
         </a>
 
-        <a class="nav-item" data-view="audit">
+        <a class="nav-item admin-nav-item" data-view="audit">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           </span>
           <span>Audit Trail</span>
         </a>
 
-        <a class="nav-item" data-view="git">
+        <a class="nav-item admin-nav-item" data-view="git">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
           </span>
-          <span>Git & Workspaces</span>
+          <span>Git &amp; Workspaces</span>
         </a>
       </nav>
 
+      <!-- Sidebar Footer with Interactive RAM & Storage Click -->
       <div class="sidebar-footer">
-        <div class="system-meter">
+        <div id="sidebar-ram-card" class="system-meter" title="Click to view storage breakdown (Usage & Remaining)" onclick="App.openMemoryModal()">
           <div class="meter-header">
-            <span>System RAM</span>
-            <span id="sidebar-ram-text">--% Used</span>
+            <span style="font-weight: 700; color: var(--text-primary);">Storage (RAM)</span>
+            <span id="sidebar-ram-text" style="font-weight: 600; color: #818cf8;">-- GB Used</span>
           </div>
           <div class="meter-bar-bg">
-            <div id="sidebar-ram-fill" class="meter-bar-fill" style="width: 20%;"></div>
+            <div id="sidebar-ram-fill" class="meter-bar-fill" style="width: 50%; background: #6366f1;"></div>
           </div>
-          <div class="concurrency-badge">
-            <span>Concurrency Limit:</span>
-            <strong style="color: var(--text-primary);">1 Agent Max</strong>
+          <div class="concurrency-badge" style="margin-top: 0.35rem;">
+            <span id="sidebar-ram-rem" style="font-size: 0.72rem; color: #10b981; font-weight: 600;">Remaining: -- GB</span>
+            <span style="font-size: 0.68rem; color: #818cf8;">View Storage 🔍</span>
           </div>
         </div>
       </div>
@@ -96,20 +113,28 @@
       <header class="app-header">
         <div class="header-left">
           <h1 id="view-header-title" class="view-title">Executive Dashboard</h1>
-          <div id="header-repo-path" class="repo-pill" title="Target Repository">
-            Detecting repository...
+          <div id="header-repo-path" class="repo-pill" title="Active Project Workspace">
+            Workspace: Orchestrator
           </div>
         </div>
 
         <div class="header-right">
+          <!-- Live heartbeat -->
           <div class="live-pulse">
             <span id="pulse-indicator" class="pulse-dot"></span>
             <span id="pulse-text">Orchestrator Ready</span>
           </div>
+
+          <!-- Add New Task button -->
           <button id="btn-create-task" class="btn btn-primary btn-sm">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New Task
+            + Add Task
           </button>
+
+          <!-- User Profile & Authentication Widget -->
+          <div id="header-auth-container" style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- Dynamically populated by app.js (Logged-in profile chip or Login button) -->
+          </div>
         </div>
       </header>
 
@@ -120,18 +145,26 @@
     </main>
   </div>
 
-  <!-- Modal: Create Task Wizard -->
+  <!-- Modal 1: Create Task Wizard with ALWAYS-VISIBLE Sticky Add Button -->
   <div id="modal-create-task" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title">Create Orchestration Task</h3>
-        <button id="btn-close-modal" class="modal-close">&times;</button>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <h3 class="modal-title">Create &amp; Add New Task</h3>
+          <span class="badge badge-neutral" style="font-size: 0.68rem;">NAO Engine</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('form-create-task').requestSubmit()">
+            ➕ Add Task
+          </button>
+          <button type="button" id="btn-close-modal" class="modal-close">&times;</button>
+        </div>
       </div>
       <form id="form-create-task">
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label" for="task-title-input">Task Title</label>
-            <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Implement Chess Move Validation" />
+            <label class="form-label" for="task-title-input">Task Title *</label>
+            <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Implement Chess Move Validation" required />
           </div>
 
           <div class="form-group">
@@ -148,14 +181,14 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="task-desc-input">Task Specification / Prompt *</label>
+            <label class="form-label" for="task-desc-input">Task Specification / Engineering Prompt *</label>
             <textarea id="task-desc-input" class="form-textarea" rows="4" placeholder="Detailed engineering instructions for the agent..." required></textarea>
           </div>
 
           <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
               <label class="form-label">Acceptance Criteria</label>
-              <button type="button" id="btn-add-criterion" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">+ Add Criterion</button>
+              <button type="button" id="btn-add-criterion" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">+ Add Criterion</button>
             </div>
             <div id="criteria-container">
               <div class="criterion-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
@@ -194,20 +227,110 @@
             <input type="text" id="task-test-cmd-input" class="form-input" placeholder="e.g. pytest -q" />
           </div>
         </div>
+
+        <!-- Sticky Modal Footer with PROMINENT Add Task Button -->
         <div class="modal-footer">
           <button type="button" id="btn-cancel-task" class="btn btn-secondary">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Task</button>
+          <button type="submit" id="btn-submit-task" class="btn btn-primary" style="padding: 0.6rem 1.4rem; font-size: 0.9rem; font-weight: 700; box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);">
+            ➕ Add Task &amp; Launch
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal: Approval Decision -->
+  <!-- Modal 2: Storage Breakdown (Usage & Remaining) -->
+  <div id="modal-memory-telemetry" class="modal-overlay">
+    <div class="modal-content" style="max-width: 520px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <h3 class="modal-title">System Storage (Usage &amp; Remaining)</h3>
+        </div>
+        <button type="button" class="modal-close" onclick="App.closeModal('modal-memory-telemetry')">&times;</button>
+      </div>
+      <div class="modal-body" id="memory-telemetry-body">
+        <!-- Populated dynamically by App.openMemoryModal() -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-memory-telemetry')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Authentication (2 People: Admin & User) -->
+  <div id="modal-auth" class="modal-overlay">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 id="auth-modal-title" class="modal-title">Sign In (Admin / User)</h3>
+        <button type="button" class="modal-close" onclick="App.closeModal('modal-auth')">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 1rem;">
+        <!-- Two People Quick Selector -->
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary" style="flex: 1; padding: 0.55rem; font-size: 0.8rem; border-color: #6366f1;" onclick="App.quickLogin('admin', 'admin123')">
+            🛡️ Log In as Admin
+          </button>
+          <button type="button" class="btn btn-secondary" style="flex: 1; padding: 0.55rem; font-size: 0.8rem; border-color: #10b981;" onclick="App.quickLogin('user', 'user123')">
+            👤 Log In as User
+          </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="auth-nav-tabs">
+          <button type="button" id="tab-auth-login" class="auth-nav-btn active" onclick="App.switchAuthTab('login')">Sign In</button>
+          <button type="button" id="tab-auth-register" class="auth-nav-btn" onclick="App.switchAuthTab('register')">Account Setup</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="form-auth-login" onsubmit="App.handleLogin(event)">
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">Username</label>
+            <input type="text" id="login-username" class="form-input" placeholder="e.g. admin or user" required />
+          </div>
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="form-label">Password</label>
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.65rem; font-weight: 700;">
+            Sign In
+          </button>
+          <div style="text-align: center; margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
+            2 Dedicated Accounts: <code>admin</code> (Admin) &amp; <code>user</code> (User)
+          </div>
+        </form>
+
+        <!-- Register / Setup Form (Strictly for User — Admin cannot be created) -->
+        <form id="form-auth-register" style="display: none;" onsubmit="App.handleRegister(event)">
+          <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid var(--border-subtle); padding: 0.65rem 0.8rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem; font-size: 0.75rem; color: var(--text-secondary);">
+            Admin is fixed. You can register a new <strong>User (Developer)</strong> account below.
+          </div>
+          <input type="hidden" id="reg-role" value="User" />
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="reg-fullname" class="form-input" placeholder="e.g. Developer User" required />
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">Username</label>
+            <input type="text" id="reg-username" class="form-input" placeholder="e.g. user2" required />
+          </div>
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="form-label">Password</label>
+            <input type="password" id="reg-password" class="form-input" placeholder="••••••••" required minlength="4" />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.65rem; font-weight: 700;">
+            Create User Account &amp; Sign In
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Approval Decision -->
   <div id="modal-approval-decision" class="modal-overlay">
     <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header">
         <h3 class="modal-title">Human Gatekeeper Decision</h3>
-        <button id="btn-close-decision-modal" class="modal-close">&times;</button>
+        <button type="button" id="btn-close-decision-modal" class="modal-close">&times;</button>
       </div>
       <form id="form-approval-decision" onsubmit="App.handleDecisionSubmit(event)">
         <input type="hidden" id="decision-task-id" />
@@ -242,7 +365,7 @@
   <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/js/api.js"></script>
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/api.js?v=3"></script>
+  <script src="/static/js/app.js?v=3"></script>
 </body>
 </html>

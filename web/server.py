@@ -59,10 +59,30 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-def run_server(host: str = "127.0.0.1", port: int = 8000, reload: bool = False) -> None:
-    """Run the web server with uvicorn."""
+def run_server(host: str = "127.0.0.1", port: int = 8000, reload: bool = False, open_browser: bool = True) -> None:
+    """Run the web server with uvicorn and optionally open the browser."""
     import uvicorn
-    print(f"[*] Starting NAO Orchestrator Web Dashboard at: http://{host}:{port}")
+    import webbrowser
+    import threading
+    import time
+
+    url = f"http://{host}:{port}"
+    print("\n" + "=" * 62)
+    print(f" [*] NAO Web Dashboard is starting!")
+    print(f" [*] Open this link in your browser:")
+    print(f"     --> {url}")
+    print(f" [*] Interactive API Docs: {url}/docs")
+    print("=" * 62 + "\n")
+
+    if open_browser:
+        def _open():
+            time.sleep(1.0)
+            try:
+                webbrowser.open(url)
+            except Exception:
+                pass
+        threading.Thread(target=_open, daemon=True).start()
+
     uvicorn.run("web.server:app", host=host, port=port, reload=reload)
 
 
@@ -71,6 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--host", default="127.0.0.1", help="Host interface to bind (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8000, help="Port to listen on (default: 8000)")
     parser.add_argument("--reload", action="store_true", help="Enable hot reload")
+    parser.add_argument("--no-browser", action="store_true", help="Don't automatically open the browser")
     args = parser.parse_args()
 
-    run_server(host=args.host, port=args.port, reload=args.reload)
+    run_server(host=args.host, port=args.port, reload=args.reload, open_browser=not args.no_browser)
