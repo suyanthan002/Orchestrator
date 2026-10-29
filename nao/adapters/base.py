@@ -321,22 +321,6 @@ class AgentAdapter(ABC):
 
     # -- execution ---------------------------------------------------------
     def execute(self, request: AgentRequest) -> AgentResponse:
-        availability = self.availability()
-        if not availability.available:
-            return AgentResponse(
-                job_id=request.job_id,
-                agent=self.name,
-                status=JobStatus.UNAVAILABLE.value,
-                errors=[
-                    {
-                        "failure_class": FailureClass.UNAVAILABLE.value,
-                        "message": availability.reason,
-                        "retryable": False,
-                    }
-                ],
-                native_metadata={"availability": availability.reason},
-            )
-
         valid, reason = self.validate_permissions(request.permissions)
         if not valid:
             return AgentResponse(
@@ -351,6 +335,22 @@ class AgentAdapter(ABC):
                     }
                 ],
                 native_metadata={"unsupported_permission": reason},
+            )
+
+        availability = self.availability()
+        if not availability.available:
+            return AgentResponse(
+                job_id=request.job_id,
+                agent=self.name,
+                status=JobStatus.UNAVAILABLE.value,
+                errors=[
+                    {
+                        "failure_class": FailureClass.UNAVAILABLE.value,
+                        "message": availability.reason,
+                        "retryable": False,
+                    }
+                ],
+                native_metadata={"availability": availability.reason},
             )
 
         assert availability.executable is not None

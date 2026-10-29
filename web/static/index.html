@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NAO — Nexora Agent Orchestrator</title>
+  <link rel="stylesheet" href="/static/css/app.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon">N</div>
+        <div class="logo-text">
+          <span>NAO Orchestrator</span>
+          <span class="logo-sub">Controlled Multi-Agent</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Core Control Plane</div>
+        <a class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </span>
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item" data-view="tasks">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </span>
+          <span>Tasks & Workflows</span>
+        </a>
+
+        <a class="nav-item" data-view="approvals">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </span>
+          <span>Human Approvals</span>
+          <span id="nav-approvals-badge" class="nav-badge badge-amber" style="display: none;">0</span>
+        </a>
+
+        <div class="nav-section-label">Fleet & Platform</div>
+        <a class="nav-item" data-view="agents">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/></svg>
+          </span>
+          <span>Agent Fleet (7)</span>
+        </a>
+
+        <a class="nav-item" data-view="recipes">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </span>
+          <span>Workflow Recipes</span>
+        </a>
+
+        <a class="nav-item" data-view="audit">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </span>
+          <span>Audit Trail</span>
+        </a>
+
+        <a class="nav-item" data-view="git">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+          </span>
+          <span>Git & Workspaces</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-meter">
+          <div class="meter-header">
+            <span>System RAM</span>
+            <span id="sidebar-ram-text">--% Used</span>
+          </div>
+          <div class="meter-bar-bg">
+            <div id="sidebar-ram-fill" class="meter-bar-fill" style="width: 20%;"></div>
+          </div>
+          <div class="concurrency-badge">
+            <span>Concurrency Limit:</span>
+            <strong style="color: var(--text-primary);">1 Agent Max</strong>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- Top Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <h1 id="view-header-title" class="view-title">Executive Dashboard</h1>
+          <div id="header-repo-path" class="repo-pill" title="Target Repository">
+            Detecting repository...
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="live-pulse">
+            <span id="pulse-indicator" class="pulse-dot"></span>
+            <span id="pulse-text">Orchestrator Ready</span>
+          </div>
+          <button id="btn-create-task" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Task
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic View Container -->
+      <div id="main-view-container" class="view-container">
+        <!-- Injected dynamically by app.js -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Create Task Wizard -->
+  <div id="modal-create-task" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Orchestration Task</h3>
+        <button id="btn-close-modal" class="modal-close">&times;</button>
+      </div>
+      <form id="form-create-task">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="task-title-input">Task Title</label>
+            <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Implement Chess Move Validation" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-recipe-select">Workflow Recipe</label>
+            <select id="task-recipe-select" class="form-select">
+              <option value="feature_implementation">Feature Implementation (Analyze ➔ Plan ➔ Approve ➔ Worktree ➔ Implement ➔ Test ➔ Review ➔ Validate ➔ Merge)</option>
+              <option value="bug_fix">Bug Fix (Reproduction ➔ Debug ➔ Fix ➔ Regression Test ➔ Review)</option>
+              <option value="refactoring">Refactoring (Preserve Tests ➔ Clean Architecture ➔ Verify)</option>
+              <option value="code_review">Code Review (Read-only Independent Review & Findings)</option>
+              <option value="security_audit">Security Audit (Vulnerability Analysis & Hardening)</option>
+              <option value="testing">Testing (Comprehensive Test Generation & Evidence)</option>
+              <option value="documentation">Documentation (Specification & Architecture Sync)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-desc-input">Task Specification / Prompt *</label>
+            <textarea id="task-desc-input" class="form-textarea" rows="4" placeholder="Detailed engineering instructions for the agent..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="form-label">Acceptance Criteria</label>
+              <button type="button" id="btn-add-criterion" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">+ Add Criterion</button>
+            </div>
+            <div id="criteria-container">
+              <div class="criterion-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+                <input type="text" class="form-input criterion-input" placeholder="e.g. Unit tests pass with 0 regressions" />
+              </div>
+            </div>
+            <span class="form-hint">Verifier gates fail closed if criteria are unbacked by evidence.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Permissions Granted</label>
+            <div class="permission-grid">
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-checkbox" value="read" checked disabled /> read (L0)
+              </label>
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-checkbox" value="write" checked /> write (L1)
+              </label>
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-checkbox" value="shell" checked /> shell (L1)
+              </label>
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-checkbox" value="git_read" checked /> git_read (L0)
+              </label>
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-checkbox" value="git_commit" /> git_commit (L2)
+              </label>
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-checkbox" value="git_merge" /> git_merge (L2)
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-test-cmd-input">Test Command (Optional override)</label>
+            <input type="text" id="task-test-cmd-input" class="form-input" placeholder="e.g. pytest -q" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-cancel-task" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Approval Decision -->
+  <div id="modal-approval-decision" class="modal-overlay">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Human Gatekeeper Decision</h3>
+        <button id="btn-close-decision-modal" class="modal-close">&times;</button>
+      </div>
+      <form id="form-approval-decision" onsubmit="App.handleDecisionSubmit(event)">
+        <input type="hidden" id="decision-task-id" />
+        <input type="hidden" id="decision-approval-id" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="decision-action-select">Decision</label>
+            <select id="decision-action-select" class="form-select">
+              <option value="approve">Grant Approval (Advance Pipeline)</option>
+              <option value="reject">Deny / Reject (Halt & Escalate)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="decision-by-input">Approver Identity</label>
+            <input type="text" id="decision-by-input" class="form-input" value="Chief Architect" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="decision-note-input">Decision Note / Feedback</label>
+            <textarea id="decision-note-input" class="form-textarea" rows="3" placeholder="Optional audit explanation..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-approval-decision')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Record Decision</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

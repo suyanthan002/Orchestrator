@@ -109,6 +109,10 @@ def build_parser() -> argparse.ArgumentParser:
     audit = sub.add_parser("audit", help="show the audit log")
     audit.add_argument("task_id")
 
+    web = sub.add_parser("web", help="start the web dashboard")
+    web.add_argument("--host", default="127.0.0.1", help="host to bind")
+    web.add_argument("--port", type=int, default=8000, help="port to listen on")
+
     return parser
 
 
@@ -124,6 +128,12 @@ def main(argv: Optional[list[str]] = None) -> int:
             _print_json(data)
         else:
             print(human)
+        return 0
+
+    # -- web ---------------------------------------------------------------
+    if args.command == "web":
+        from web.server import run_server
+        run_server(host=args.host, port=args.port)
         return 0
 
     # -- inspect -----------------------------------------------------------

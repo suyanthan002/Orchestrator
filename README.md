@@ -56,12 +56,29 @@ instead of hard-coding a path.
 
 ## Installation
 
-Requires Python 3.12+. There are no mandatory third-party dependencies.
-`psutil` is optional and enables the memory gate in the Resource Manager.
+Requires Python 3.10+. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Verify the environment:
 
 ```bash
 python -m nao inspect
 ```
+
+## Web Dashboard
+
+NAO includes a clean, structured, and modern web dashboard providing a visual state machine inspector, agent fleet status, real-time audit logs, diffs, and a human approval gatekeeper:
+
+```bash
+python run_web.py
+# or
+python -m nao web --port 8000
+```
+
+Open `http://127.0.0.1:8000` in your browser. Interactive OpenAPI documentation is also available at `http://127.0.0.1:8000/docs`.
 
 ## Supported agents
 
